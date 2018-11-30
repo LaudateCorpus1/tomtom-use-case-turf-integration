@@ -35,9 +35,7 @@ tomtom.controlPanel({
 findGeometry();
 
 function findGeometry() {
-	tomtom.fuzzySearch({
-			idxSet: "Geo"
-		})
+	tomtom.fuzzySearch({idxSet: "Geo"})
 		.query(SEARCH_QUERY)
 		.go()
 		.then(getAdditionalData);
