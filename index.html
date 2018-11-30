@@ -3,47 +3,12 @@
 
 <head>
 	<meta charset="utf-8" />
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<title>TomTom Web SDK plus TURF</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel='stylesheet' type='text/css' href='sdk/map.css' />
+	<link rel='stylesheet' type='text/css' href='style.css' />
 	<script src='sdk/tomtom.min.js'></script>
 	<script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
-
 </head>
-<style>
-	body {
-		height: 100vh;
-		width: 100vw;
-		margin: 0;
-		padding: 0;
-	}
-
-	#map {
-		height: 100vh;
-		width: 100vw;
-	}
-
-	.tomtom-control-panel {
-		border-radius: 0;
-		box-shadow: rgba(0, 0, 0, 0.45) 2px 2px 2px 0px;
-		visibility: hidden;
-	}
-
-	.tomtom-control-panel label {
-		font-size: 1.3em;
-		font-weight: bold;
-		line-height: 2;
-	}
-
-	.tomtom-control-panel span {
-		font-size: 1.2em;
-	}
-
-	.tomtom-control-panel label~div {
-		text-align: right;
-	}
-</style>
 
 <body>
 	<div id='map'>
@@ -54,98 +19,7 @@
 			</div>
 		</div>
 	</div>
-
-	<script>
-		var customInsidePolygonMarkerIcon = tomtom.L.icon({
-			iconUrl: 'img/inside_marker.png',
-			iconSize: [40, 46],
-			iconAnchor: [20, 46]
-		});
-
-		var customOutsideMarkerIcon = tomtom.L.icon({
-			iconUrl: 'img/outside_marker.png',
-			iconSize: [40, 46],
-			iconAnchor: [20, 46]
-		});
-
-		var map = tomtom.L.map('map', {
-			key: '<your-api-key>',
-			source: 'raster'
-		});
-
-		tomtom.controlPanel({
-			position: 'topright',
-			collapsed: false,
-			close: null,
-			closeOnMapClick: false
-		}).addTo(map).addContent(document.getElementById('polygon-info-box'));
-
-		var markerCoordinates = [
-			[4.899431, 52.379189],
-			[4.8255823, 52.3734312],
-			[4.7483138, 52.4022803],
-			[4.797049, 52.435065],
-			[4.885911, 52.320235]
-		];
-
-		function getGeometry() {
-			var CITY = "Amsterdam";
-			tomtom.fuzzySearch({
-					idxSet: "Geo"
-				})
-				.query(CITY)
-				.go()
-				.then(function (data) {
-					var geometryId = data[0].dataSources.geometry.id;
-					tomtom.additionalData({
-							geometries: [geometryId],
-							geometriesZoom: 12
-						})
-						.go().then(function (data) {
-							if (data.additionalData && data.additionalData.length) {
-								var geometryData = data.additionalData[0].geometryData.features[0].geometry;
-								var geoJsonLayer = tomtom.L.geoJson(geometryData, {
-									style: {
-										color: '#2FAAFF',
-										opacity: 0.8
-									}
-								}).addTo(map);
-								map.fitBounds(geoJsonLayer.getBounds());
-
-								calculateTurfArea(geometryData);
-								findPointsInsidePolygon(geometryData);
-
-								function calculateTurfArea(geometryData) {
-									var areaInMeters = turf.area(geometryData);
-									var areaInKilometers = Math.round(areaInMeters / 10000) / 100;
-									var areaInfo = document.getElementById('area-info');
-									var areaInfoWrapper = document.getElementsByClassName('tomtom-control-panel')[0];
-									areaInfoWrapper.style.visibility = "visible";
-									areaInfo.innerText = areaInKilometers;
-								}
-
-								function findPointsInsidePolygon(geometryData) {
-									var turfPolygon = turf.polygon(geometryData.coordinates);
-									var points = turf.points(markerCoordinates);
-									var pointsWithinPolygon = turf.pointsWithinPolygon(points, turfPolygon);
-									markerCoordinates.forEach(function (markerCoordinate) {
-										var marker = tomtom.L.marker(L.GeoJSON.coordsToLatLng(markerCoordinate));
-										marker.setIcon(customOutsideMarkerIcon);
-										pointsWithinPolygon.features.forEach(function (pointWithinPolygon) {
-											if (markerCoordinate[0] === pointWithinPolygon.geometry.coordinates[0] && markerCoordinate[1] ===
-												pointWithinPolygon.geometry.coordinates[1]) {
-												marker.setIcon(customInsidePolygonMarkerIcon);
-											}
-										});
-										marker.addTo(map);
-									})
-								}
-							}
-						})
-				})
-		}
-		getGeometry();
-	</script>
+	<script src='app.js'></script>
 </body>
 
 </html>
