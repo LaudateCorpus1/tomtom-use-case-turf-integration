@@ -14,29 +14,26 @@ var map = tt.map({
 	key: apiKey,
 	container: 'map',
 	center: [4.899431, 52.379189],
-	style: 'tomtom://vector/1/basic-main',
 	zoom: 10
 });
 
-findGeometry();
+map.on('load', findGeometry());
 
 function findGeometry() {
 	tt.services.fuzzySearch({
 			key: apiKey,
 			query: SEARCH_QUERY
 		})
-		.go()
 		.then(getAdditionalData);
 }
 
 function getAdditionalData(fuzzySearchResults) {
 	var geometryId = fuzzySearchResults.results[0].dataSources.geometry.id;
 	tt.services.additionalData({
-		key: apiKey,
-		geometries: [geometryId],
+			key: apiKey,
+			geometries: [geometryId],
 			geometriesZoom: 12
 		})
-		.go()
 		.then(processAdditionalDataResponse);
 }
 
@@ -47,6 +44,7 @@ function processAdditionalDataResponse(additionalDataResponse) {
 		drawPointsInsideAndOutsideOfPolygon(geometryData);
 	}
 }
+
 function buildLayer(id, data) {
 	return {
 		'id': id,
@@ -69,16 +67,17 @@ function buildLayer(id, data) {
 		}
 	}
 }
+
 function displayPolygonOnTheMap(additionalDataResult) {
 	var geometryData = additionalDataResult.geometryData.features[0].geometry.coordinates[0];
-	map.addLayer(buildLayer('fill_shape_id', geometryData));	
+	map.addLayer(buildLayer('fill_shape_id', geometryData));
 	return geometryData;
 }
 
 function calculateTurfArea(geometryData) {
 	var turfPolygon = turf.polygon(geometryData);
 	var areaInMeters = turf.area(turfPolygon);
-	var areaInKilometers = turf.round(turf.convertArea(areaInMeters, 'meters', 'kilometers'), 2); 
+	var areaInKilometers = turf.round(turf.convertArea(areaInMeters, 'meters', 'kilometers'), 2);
 	var areaInfo = document.getElementById('area-info');
 	areaInfo.innerText = areaInKilometers;
 	var areaInfoWrapper = document.getElementsByClassName('tomtom-control-panel')[0];
@@ -102,10 +101,12 @@ function drawPointsInsideAndOutsideOfPolygon(geometryData) {
 		pointsWithinPolygon.features.forEach(function (pointWithinPolygon) {
 			if (markerCoordinate[0] === pointWithinPolygon.geometry.coordinates[0] &&
 				markerCoordinate[1] === pointWithinPolygon.geometry.coordinates[1]) {
-					markerElement.innerHTML = createMarkerElementInnerHTML(customInsidePolygonMarkerIcon);
+				markerElement.innerHTML = createMarkerElementInnerHTML(customInsidePolygonMarkerIcon);
 			}
 		});
-		var marker = new tt.Marker({ element: markerElement}).setLngLat(markerCoordinate);
+		var marker = new tt.Marker({
+			element: markerElement
+		}).setLngLat(markerCoordinate);
 		marker.addTo(map);
 	});
 }
